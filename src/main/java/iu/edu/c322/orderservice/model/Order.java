@@ -1,25 +1,54 @@
 package iu.edu.c322.orderservice.model;
 
-import jakarta.validation.constraints.NotEmpty;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.persistence.*;
+
+@Entity
 public class Order {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
+    private int customerId;
     private double total;
-    private ShippingAddress shippingAddress;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "address_id")
+    private Address address;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     List<Item> items = new ArrayList<>();
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "payment_id")
     private Payment payment;
 
+    public void addOrderItem(Item item){
+        items.add(item);
+        item.setOrder(this);
+    }
+
+    public void removeOrderItem(Item item){
+        items.remove(item);
+        item.setOrder(null);
+    }
+
+    public void setCustomerId(int customerId) {
+        this.customerId = customerId;
+    }
+
+    public int getCustomerId() {
+        return customerId;
+    }
 
     public void setTotal(double total) {
         this.total = total;
     }
 
-    public void setShippingAddress(ShippingAddress address) {
-        this.shippingAddress = address;
+    public void setShippingAddress(Address address) {
+        this.address = address;
     }
 
     public void setItems(List<Item> items) {
@@ -38,8 +67,8 @@ public class Order {
         return this.total;
     }
 
-    public ShippingAddress getShippingAddress() {
-        return this.shippingAddress;
+    public Address getShippingAddress() {
+        return this.address;
     }
 
     public List<Item> getItems() {
@@ -62,107 +91,12 @@ public class Order {
             return false;
         }
         Order order = (Order) o;
-        return id == order.id && Objects.equals(items, order.items) && Objects.equals(total, order.total) && Objects.equals(shippingAddress, order.shippingAddress) && Objects.equals(payment, order.payment);
+        return id == order.id && Objects.equals(items, order.items) && Objects.equals(total, order.total) && Objects.equals(address, order.address) && Objects.equals(payment, order.payment);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, total, items, shippingAddress, payment);
+        return Objects.hash(id, total, items, address, payment);
     }
 }
 
-class ShippingAddress {
-    @NotEmpty(message = "state not found.")
-    private String state;
-
-    @NotEmpty(message = "city not found.")
-    private String city;
-
-    private int postalCode;
-
-    public void setState(String state) {
-        this.state = state;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public void setPostalCode(int postalCode) {
-        this.postalCode = postalCode;
-    }
-
-    public String getState() {
-        return state;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public int getPostalCode() {
-        return postalCode;
-    }
-}
-
-class Item {
-    @NotEmpty(message = "item name not found.")
-    private String name;
-
-    private int quantity;
-    private int price;
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
-
-    public void setPrice(int price) {
-        this.price = price;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public int getPrice() {
-        return price;
-    }
-}
-
-class Payment {
-    private String method;
-    private String number;
-    private ShippingAddress billingAddress;
-
-    public void setMethod(String method) {
-        this.method = method;
-    }
-
-    public void setNumber(String number) {
-        this.number = number;
-    }
-
-    public void setBillingAddress(ShippingAddress billingAddress) {
-        this.billingAddress = billingAddress;
-    }
-
-    public String getMethod() {
-        return method;
-    }
-
-    public String getNumber() {
-        return number;
-    }
-
-    public ShippingAddress getBillingAddress() {
-        return billingAddress;
-    }
-}
